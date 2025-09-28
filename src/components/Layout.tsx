@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Button } from './ui/button';
 import { Badge } from './ui/badge';
-import { Card } from './ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { 
   BarChart3, 
@@ -107,11 +106,11 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
-            <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-3 shrink-0"> {/* ADD shrink-0 */}
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                 <Bitcoin className="w-5 h-5 text-white" />
               </div>
-              <div>
+              <div className="hidden sm:block"> {/* Hide title on extra small screens for more space */}
                 <h1 className="font-semibold text-gray-900 dark:text-gray-100">DAT Monitor</h1>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Digital Asset Treasury</p>
               </div>
@@ -212,8 +211,8 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
                   </Button>
               )}
               
-              {/* Market Status (Dark mode fix applied to text and badge) */}
-              <div className="flex items-center space-x-2">
+              {/* Market Status (Hide on desktop if screen is too small, but mainly hidden below lg) */}
+              <div className="hidden xl:flex items-center space-x-2"> {/* Change hidden lg:flex to hidden xl:flex */}
                 <Bitcoin className="w-4 h-4 text-orange-500" />
                 <span className="text-sm font-medium text-gray-900 dark:text-gray-100">$67,241</span>
                 <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400">

@@ -112,7 +112,8 @@ export function Analytics({ onViewCompany, onBack }: AnalyticsProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* R1 Fix: Changed to flex-col sm:flex-row and adjusted content classes */}
+      <div className="flex flex-col sm:flex-row items-start justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -125,10 +126,11 @@ export function Analytics({ onViewCompany, onBack }: AnalyticsProps) {
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        {/* R1 Fix: Changed to flex-wrap gap-2 on mobile */}
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:space-x-2">
             {/* Timeframe and Metric selectors remain as filters */}
           <Select value={timeframe} onValueChange={setTimeframe}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -140,7 +142,7 @@ export function Analytics({ onViewCompany, onBack }: AnalyticsProps) {
           </Select>
           
           <Select value={metric} onValueChange={setMetric}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-full sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

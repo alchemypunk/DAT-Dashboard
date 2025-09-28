@@ -119,7 +119,7 @@ export function TreasuryDashboard({ onViewCompany, onViewAsset, onShowSubmit }: 
           <p className="text-gray-600 dark:text-gray-400">{t('dashboard.subtitle')}</p>
         </div>
         
-        <div className="flex items-center space-x-2">
+        <div className="flex flex-wrap gap-2 sm:flex-nowrap sm:space-x-2"> {/* R1 Fix: Added flex-wrap gap-2 for better mobile stacking */}
             {/* Asset Switcher (Req 6) */}
             <Select value={asset} onValueChange={setAsset}>
                 <SelectTrigger className="w-24">
@@ -220,7 +220,8 @@ export function TreasuryDashboard({ onViewCompany, onViewAsset, onShowSubmit }: 
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="flex flex-col lg:flex-row space-y-4 lg:space-y-0 lg:space-x-4">
+          {/* R1 Fix: Added flex-col/lg:flex-row spacing helpers for filters */}
+          <div className="flex flex-col space-y-4 lg:space-y-0 lg:flex-row lg:space-x-4">
             <div className="flex-1">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -232,7 +233,8 @@ export function TreasuryDashboard({ onViewCompany, onViewAsset, onShowSubmit }: 
                 />
               </div>
             </div>
-            {/* ... (Other filters remain the same) ... */}
+            
+            {/* R1 Fix: Added w-full */}
             <Select value={sectorFilter} onValueChange={setSectorFilter}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="Filter by sector" />
@@ -247,6 +249,7 @@ export function TreasuryDashboard({ onViewCompany, onViewAsset, onShowSubmit }: 
               </SelectContent>
             </Select>
 
+            {/* R1 Fix: Added w-full */}
             <Select value={sortBy} onValueChange={setSortBy}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder={t('common.sortBy')} />

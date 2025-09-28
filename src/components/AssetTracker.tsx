@@ -153,7 +153,8 @@ export function AssetTracker({ selectedAsset = 'BTC', onViewCompany, onBack }: A
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* R1 Fix: Added flex-col sm:flex-row space-y-4 sm:space-y-0 */}
+      <div className="flex flex-col sm:flex-row items-start justify-between space-y-4 sm:space-y-0">
         <div className="flex items-center space-x-4">
           <Button variant="ghost" size="sm" onClick={onBack}>
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -171,7 +172,8 @@ export function AssetTracker({ selectedAsset = 'BTC', onViewCompany, onBack }: A
           </div>
         </div>
         
-        <div className="flex items-center space-x-2">
+        {/* R1 Fix: Removed unnecessary wrapper div, adjusted spacing */}
+        <div className="flex items-center space-x-2 w-full sm:w-auto"> 
             {/* Asset Switcher (Req 6) */}
             <Select value={asset} onValueChange={setAsset}>
                 <SelectTrigger className="w-24">
@@ -183,9 +185,9 @@ export function AssetTracker({ selectedAsset = 'BTC', onViewCompany, onBack }: A
                     <SelectItem value="USDC">USDC (Mock)</SelectItem>
                 </SelectContent>
             </Select>
-          <div className="text-right">
+          <div className="text-right flex-1"> {/* Added flex-1 to price container on mobile */}
             <div className="text-2xl font-bold dark:text-gray-100">${assetData.currentPrice.toLocaleString()}</div>
-            <div className={`flex items-center text-sm ${timeframeChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+            <div className={`flex items-center justify-end text-sm ${timeframeChange >= 0 ? 'text-green-600' : 'text-red-600'}`}>
               {timeframeChange >= 0 ? (
                 <TrendingUp className="w-4 h-4 mr-1" />
               ) : (

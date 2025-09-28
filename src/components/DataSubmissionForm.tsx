@@ -29,7 +29,8 @@ export function DataSubmissionForm({ onBack }: { onBack: () => void }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* R1 Fix: Added flex-col sm:flex-row and adjusted alignment */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-semibold flex items-center space-x-2"><Send className="h-6 w-6" /> <span className="dark:text-gray-100">{t('nav.submitData')}</span></h1>
           <p className="text-muted-foreground">Contribute new or updated treasury data to the dashboard.</p>
@@ -73,7 +74,8 @@ export function DataSubmissionForm({ onBack }: { onBack: () => void }) {
               <p className="text-sm text-muted-foreground">请提供数据来源链接和最新的资产持有数据。</p>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              {/* R1 Fix: Grid for inputs is responsive */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4"> 
                 <div className="space-y-2">
                   <Label htmlFor="company">公司股票代码/名称 *</Label>
                   <Input id="company" required placeholder="例如：MSTR 或 MicroStrategy" />
@@ -124,10 +126,11 @@ export function DataSubmissionForm({ onBack }: { onBack: () => void }) {
         )}
 
         {/* Form Actions */}
-        <div className="flex justify-end">
+        {/* R1 Fix: Ensures buttons stack on mobile */}
+        <div className="flex flex-col sm:flex-row justify-end space-y-4 sm:space-y-0 sm:space-x-4">
           <Button 
             type="submit"
-            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700"
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 w-full sm:w-auto" // Added w-full sm:w-auto
             disabled={isSubmitting}
           >
             {isSubmitting ? '正在提交...' : (
