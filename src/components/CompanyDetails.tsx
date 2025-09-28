@@ -10,14 +10,14 @@ import {
   DollarSign,
   TrendingUp,
   TrendingDown,
-  Calendar,
   ExternalLink,
   Globe,
-  Users,
   Briefcase,
-  PieChart
+  PieChart,
+  Lock
 } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useAuth } from '../contexts/AuthContext'; // NEW: Import Auth context
 
 interface CompanyDetailsProps {
   companyId: string;
@@ -25,22 +25,20 @@ interface CompanyDetailsProps {
   onViewAsset: (asset: string) => void;
 }
 
-export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetailsProps) {
-  const { t } = useLanguage();
-  // Mock detailed company data
-  const companyData = {
+// MOCK DATA (Should be fetched/managed by admin, fulfilling Req 3)
+const mockCompanyData = {
     MSTR: {
       name: 'MicroStrategy Incorporated',
       symbol: 'MSTR',
-      sector: t('sector.businessIntelligence'),
+      sector: 'Business Intelligence Software',
       country: 'United States',
       founded: '1989',
       employees: '4,500+',
       marketCap: 47800000000,
       website: 'https://microstrategy.com',
       ceo: 'Michael J. Saylor',
-      description: 'MicroStrategy is a leading provider of enterprise analytics and mobility software. The company has been accumulating Bitcoin as a primary treasury reserve asset since August 2020.',
-      bitcoinStrategy: 'MicroStrategy adopted Bitcoin as its primary treasury reserve asset, viewing it as a superior store of value compared to cash.',
+      description: 'MicroStrategy adopted Bitcoin as its primary treasury reserve asset, viewing it as a superior store of value compared to cash and a hedge against inflation.',
+      bitcoinStrategy: 'The company actively uses company debt and convertible notes to acquire more Bitcoin, implementing a pure Bitcoin-only treasury strategy.',
       
       holdings: {
         bitcoin: {
@@ -55,38 +53,10 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
       },
       
       transactions: [
-        {
-          date: '2024-01-10',
-          type: 'Purchase',
-          amount: 3000,
-          price: 42500,
-          value: 127500000,
-          description: 'Q4 2023 Bitcoin acquisition'
-        },
-        {
-          date: '2023-12-15',
-          type: 'Purchase',
-          amount: 2500,
-          price: 41200,
-          value: 103000000,
-          description: 'Strategic treasury purchase'
-        },
-        {
-          date: '2023-11-20',
-          type: 'Purchase',
-          amount: 5000,
-          price: 38750,
-          value: 193750000,
-          description: 'Quarterly Bitcoin investment'
-        },
-        {
-          date: '2023-10-30',
-          type: 'Purchase',
-          amount: 7500,
-          price: 35600,
-          value: 267000000,
-          description: 'Treasury optimization'
-        }
+        { date: '2024-01-10', type: 'Purchase', amount: 3000, price: 42500, value: 127500000, description: 'Q4 2023 Bitcoin acquisition' },
+        { date: '2023-12-15', type: 'Purchase', amount: 2500, price: 41200, value: 103000000, description: 'Strategic treasury purchase' },
+        { date: '2023-11-20', type: 'Purchase', amount: 5000, price: 38750, value: 193750000, description: 'Quarterly Bitcoin investment' },
+        { date: '2023-10-30', type: 'Purchase', amount: 7500, price: 35600, value: 267000000, description: 'Treasury optimization' }
       ],
       
       financials: {
@@ -97,11 +67,26 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
         revenue: 508000000
       }
     }
-  };
+    // Add other companies here, e.g., TSLA, COIN etc.
+};
 
-  const company = companyData[companyId as keyof typeof companyData] || companyData.MSTR;
+export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetailsProps) {
+  const { t } = useLanguage();
+  const { isRegistered } = useAuth(); // NEW: Auth context (Req 8)
+  
+  const company = mockCompanyData[companyId as keyof typeof mockCompanyData] || mockCompanyData.MSTR;
   const btcHolding = company.holdings.bitcoin;
 
+  // --- ACCESS CONTROL LOGIC (Req 8: 50% limit & blur) ---
+  const obfuscate = (value: any) => {
+    return isRegistered ? value : <span className="blur-sm">{value}</span>;
+  };
+  
+  // Hide transactions for unregistered users
+  const visibleTransactions = isRegistered ? company.transactions : []; 
+  const isTransactionHidden = !isRegistered && company.transactions.length > 0;
+  
+  // Formatters (Unchanged)
   const formatCurrency = (value: number) => {
     if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
     if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
@@ -125,16 +110,16 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
           </Button>
           
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <span className="text-lg font-semibold text-blue-600">
+            <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+              <span className="text-lg font-semibold text-blue-600 dark:text-blue-400">
                 {company.symbol.charAt(0)}
               </span>
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">{company.name}</h1>
-              <div className="flex items-center space-x-2 text-gray-600">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">{company.name}</h1>
+              <div className="flex items-center space-x-2 text-gray-600 dark:text-gray-400">
                 <span>{company.symbol}</span>
-                <Badge variant="outline">{company.sector}</Badge>
+                <Badge variant="outline" className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">{t(`sector.${company.sector.replace(/\s/g, '')}` as any) || company.sector}</Badge>
               </div>
             </div>
           </div>
@@ -158,33 +143,34 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
         </div>
       </div>
 
-      {/* Key Metrics */}
+      {/* Key Metrics (with obfuscation) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('company.bitcoinHoldings')}</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">{t('company.bitcoinHoldings')}</CardTitle>
             <Bitcoin className="w-4 h-4 text-orange-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatBitcoin(btcHolding.amount)}</div>
+            <div className="text-2xl font-bold dark:text-gray-100">{obfuscate(formatBitcoin(btcHolding.amount))}</div>
             <p className="text-xs text-muted-foreground">{t('company.currentHoldings')}</p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('company.currentValue')}</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">{t('company.currentValue')}</CardTitle>
             <DollarSign className="w-4 h-4 text-green-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(btcHolding.currentValue)}</div>
+            <div className="text-2xl font-bold dark:text-gray-100">{obfuscate(formatCurrency(btcHolding.currentValue))}</div>
             <p className="text-xs text-muted-foreground">{t('company.marketValue')}</p>
           </CardContent>
         </Card>
-
-        <Card>
+        
+        {/* Cost and PnL are highly sensitive, so they are always obfuscated unless logged in */}
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('company.unrealizedPnL')}</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">{t('company.unrealizedPnL')}</CardTitle>
             {profitLossPercentage >= 0 ? (
               <TrendingUp className="w-4 h-4 text-green-600" />
             ) : (
@@ -193,21 +179,21 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
           </CardHeader>
           <CardContent>
             <div className={`text-2xl font-bold ${profitLossPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-              {formatCurrency(btcHolding.unrealizedPnL)}
+              {obfuscate(formatCurrency(btcHolding.unrealizedPnL))}
             </div>
             <p className="text-xs text-muted-foreground">
-              {profitLossPercentage >= 0 ? '+' : ''}{profitLossPercentage.toFixed(1)}%
+              {obfuscate(`${profitLossPercentage >= 0 ? '+' : ''}${profitLossPercentage.toFixed(1)}%`)}
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="dark:bg-card dark:border-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">{t('company.averagePrice')}</CardTitle>
+            <CardTitle className="text-sm font-medium dark:text-gray-400">{t('company.averagePrice')}</CardTitle>
             <PieChart className="w-4 h-4 text-blue-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">${btcHolding.averagePrice.toLocaleString()}</div>
+            <div className="text-2xl font-bold dark:text-gray-100">{obfuscate(`$${btcHolding.averagePrice.toLocaleString()}`)}</div>
             <p className="text-xs text-muted-foreground">{t('company.perBitcoin')}</p>
           </CardContent>
         </Card>
@@ -224,102 +210,104 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
 
         <TabsContent value="overview" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="dark:bg-card dark:border-border">
               <CardHeader>
-                <CardTitle>Bitcoin Strategy</CardTitle>
+                <CardTitle className="dark:text-gray-100">{t('company.bitcoinStrategy')}</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-gray-600 mb-4">{company.description}</p>
-                <div className="bg-blue-50 p-4 rounded-lg">
-                  <h4 className="font-medium text-blue-900 mb-2">Treasury Strategy</h4>
-                  <p className="text-blue-800 text-sm">{company.bitcoinStrategy}</p>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">{company.description}</p>
+                <div className="bg-blue-50 dark:bg-blue-900/20 p-4 rounded-lg">
+                  <h4 className="font-medium text-blue-900 dark:text-blue-400 mb-2">{t('company.treasuryStrategy')}</h4>
+                  <p className="text-blue-800 dark:text-blue-300 text-sm">{company.bitcoinStrategy}</p>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-card dark:border-border">
               <CardHeader>
-                <CardTitle>Key Holdings Metrics</CardTitle>
+                <CardTitle className="dark:text-gray-100">{t('company.keyMetrics')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">First Purchase:</span>
-                  <span className="font-medium">{btcHolding.firstPurchase}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.firstPurchase')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(btcHolding.firstPurchase)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Last Purchase:</span>
-                  <span className="font-medium">{btcHolding.lastPurchase}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.lastPurchase')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(btcHolding.lastPurchase)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Cost Basis:</span>
-                  <span className="font-medium">{formatCurrency(btcHolding.totalCost)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.totalCostBasis')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(btcHolding.totalCost))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">% of Treasury:</span>
-                  <span className="font-medium">{company.financials.bitcoinPercentage}%</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.treasuryPercent')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(`${company.financials.bitcoinPercentage}%`)}</span>
                 </div>
               </CardContent>
             </Card>
           </div>
         </TabsContent>
 
+        {/* Holdings Tab (with obfuscation) */}
         <TabsContent value="holdings" className="space-y-6">
-          <Card>
+          <Card className="dark:bg-card dark:border-border">
             <CardHeader>
-              <CardTitle>Portfolio Breakdown</CardTitle>
+              <CardTitle className="dark:text-gray-100">{t('company.portfolioBreakdown')}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
                 {/* Bitcoin Holdings */}
-                <div className="border rounded-lg p-4">
+                <div className="border dark:border-gray-700 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <Bitcoin className="w-6 h-6 text-orange-500" />
-                      <span className="font-medium">Bitcoin (BTC)</span>
+                      <span className="font-medium dark:text-gray-100">Bitcoin (BTC)</span>
                     </div>
-                    <Badge variant="secondary">Primary Asset</Badge>
+                    <Badge variant="secondary" className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">{t('company.primaryAsset')}</Badge>
                   </div>
                   
+                  {/* ... (Holdings metrics with obfuscate) ... */}
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Amount</p>
-                      <p className="font-semibold">{formatBitcoin(btcHolding.amount)}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.currentHoldings')}</p>
+                      <p className="font-semibold dark:text-gray-100">{obfuscate(formatBitcoin(btcHolding.amount))}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Market Value</p>
-                      <p className="font-semibold">{formatCurrency(btcHolding.currentValue)}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.marketValue')}</p>
+                      <p className="font-semibold dark:text-gray-100">{obfuscate(formatCurrency(btcHolding.currentValue))}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Avg. Price</p>
-                      <p className="font-semibold">${btcHolding.averagePrice.toLocaleString()}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.avgAllocation')}</p>
+                      <p className="font-semibold dark:text-gray-100">{obfuscate(`$${btcHolding.averagePrice.toLocaleString()}`)}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">Unrealized P&L</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.unrealizedPnL')}</p>
                       <p className={`font-semibold ${profitLossPercentage >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                        {formatCurrency(btcHolding.unrealizedPnL)}
+                        {obfuscate(formatCurrency(btcHolding.unrealizedPnL))}
                       </p>
                     </div>
                   </div>
                 </div>
 
                 {/* Cash Holdings */}
-                <div className="border rounded-lg p-4">
+                <div className="border dark:border-gray-700 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center space-x-2">
                       <DollarSign className="w-6 h-6 text-green-500" />
-                      <span className="font-medium">Cash & Equivalents</span>
+                      <span className="font-medium dark:text-gray-100">{t('company.cashEquivalents')}</span>
                     </div>
-                    <Badge variant="outline">Traditional Asset</Badge>
+                    <Badge variant="outline" className="dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300">{t('company.traditionalAsset')}</Badge>
                   </div>
                   
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                      <p className="text-sm text-gray-600">Amount</p>
-                      <p className="font-semibold">{formatCurrency(company.financials.cash)}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.currentHoldings')}</p>
+                      <p className="font-semibold dark:text-gray-100">{obfuscate(formatCurrency(company.financials.cash))}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-600">% of Treasury</p>
-                      <p className="font-semibold">{(100 - company.financials.bitcoinPercentage).toFixed(1)}%</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{t('company.treasuryPercent')}</p>
+                      <p className="font-semibold dark:text-gray-100">{obfuscate(`${(100 - company.financials.bitcoinPercentage).toFixed(1)}%`)}</p>
                     </div>
                   </div>
                 </div>
@@ -328,103 +316,113 @@ export function CompanyDetails({ companyId, onBack, onViewAsset }: CompanyDetail
           </Card>
         </TabsContent>
 
+        {/* Transactions Tab (Restricted for unregistered users) */}
         <TabsContent value="transactions" className="space-y-6">
-          <Card>
+          <Card className="dark:bg-card dark:border-border">
             <CardHeader>
-              <CardTitle>Recent Bitcoin Transactions</CardTitle>
+              <CardTitle className="dark:text-gray-100">{t('company.recentTransactions')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {company.transactions.map((transaction, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                        <TrendingUp className="w-5 h-5 text-green-600" />
+              {isTransactionHidden ? (
+                <div className="text-center p-8 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <Lock className="w-8 h-8 mx-auto text-red-500 dark:text-red-400 mb-2" />
+                    <p className="font-semibold text-red-600 dark:text-red-400">Transaction History is restricted.</p>
+                    <p className="text-sm text-muted-foreground">请注册/登录以查看完整的交易记录。</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {visibleTransactions.map((transaction, index) => (
+                    <div key={index} className="flex items-center justify-between p-4 border dark:border-gray-700 rounded-lg hover:bg-gray-50/50 dark:hover:bg-gray-800/50">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-10 h-10 bg-green-100 dark:bg-green-900/20 rounded-full flex items-center justify-center">
+                          <TrendingUp className="w-5 h-5 text-green-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium dark:text-gray-100">{transaction.type}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{transaction.description}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="font-medium">{transaction.type}</p>
-                        <p className="text-sm text-gray-600">{transaction.description}</p>
+                      
+                      <div className="text-right">
+                        <p className="font-semibold dark:text-gray-100">{formatBitcoin(transaction.amount)}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          ${transaction.price.toLocaleString()} per BTC
+                        </p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{transaction.date}</p>
+                      </div>
+                      
+                      <div className="text-right">
+                        <p className="font-semibold dark:text-gray-100">{formatCurrency(transaction.value)}</p>
                       </div>
                     </div>
-                    
-                    <div className="text-right">
-                      <p className="font-semibold">{formatBitcoin(transaction.amount)}</p>
-                      <p className="text-sm text-gray-600">
-                        ${transaction.price.toLocaleString()} per BTC
-                      </p>
-                      <p className="text-sm text-gray-500">{transaction.date}</p>
-                    </div>
-                    
-                    <div className="text-right">
-                      <p className="font-semibold">{formatCurrency(transaction.value)}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
+        {/* Company Info Tab (with obfuscation) */}
         <TabsContent value="company" className="space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Card>
+            <Card className="dark:bg-card dark:border-border">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 dark:text-gray-100">
                   <Building2 className="w-5 h-5" />
-                  <span>Company Information</span>
+                  <span>{t('company.companyInformation')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Founded:</span>
-                  <span className="font-medium">{company.founded}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.founded')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(company.founded)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Country:</span>
-                  <span className="font-medium">{company.country}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.country')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(company.country)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">CEO:</span>
-                  <span className="font-medium">{company.ceo}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.ceo')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(company.ceo)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Employees:</span>
-                  <span className="font-medium">{company.employees}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.employees')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(company.employees)}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Market Cap:</span>
-                  <span className="font-medium">{formatCurrency(company.marketCap)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.marketCap')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(company.marketCap))}</span>
                 </div>
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="dark:bg-card dark:border-border">
               <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
+                <CardTitle className="flex items-center space-x-2 dark:text-gray-100">
                   <Briefcase className="w-5 h-5" />
-                  <span>Financial Overview</span>
+                  <span>{t('company.financialOverview')}</span>
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Total Assets:</span>
-                  <span className="font-medium">{formatCurrency(company.financials.totalAssets)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.totalAssets')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(company.financials.totalAssets))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Bitcoin Holdings:</span>
-                  <span className="font-medium">{formatCurrency(btcHolding.currentValue)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.bitcoinHoldings')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(btcHolding.currentValue))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Cash & Equivalents:</span>
-                  <span className="font-medium">{formatCurrency(company.financials.cash)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.cashEquivalents')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(company.financials.cash))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Annual Revenue:</span>
-                  <span className="font-medium">{formatCurrency(company.financials.revenue)}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.annualRevenue')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(formatCurrency(company.financials.revenue))}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Last Report:</span>
-                  <span className="font-medium">{company.financials.lastQuarter}</span>
+                  <span className="text-gray-600 dark:text-gray-400">{t('company.lastReport')}:</span>
+                  <span className="font-medium dark:text-gray-100">{obfuscate(company.financials.lastQuarter)}</span>
                 </div>
               </CardContent>
             </Card>

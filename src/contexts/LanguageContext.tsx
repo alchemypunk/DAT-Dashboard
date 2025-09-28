@@ -17,7 +17,9 @@ const translations = {
       dashboard: 'Treasury Dashboard',
       assetTracker: 'Asset Tracker',
       analytics: 'Analytics',
-      backToDashboard: 'Back to Dashboard'
+      backToDashboard: 'Back to Dashboard',
+      adminPanel: 'Admin Panel', // NEW
+      submitData: 'Submit Data' // NEW
     },
     
     common: {
@@ -31,7 +33,8 @@ const translations = {
       viewDetails: 'View Details',
       lastUpdated: 'Last updated',
       companies: 'Companies',
-      totalAUM: 'Total AUM'
+      totalAUM: 'Total AUM',
+      backToDashboard: 'Back to Dashboard' 
     },
     
     dashboard: {
@@ -115,7 +118,8 @@ const translations = {
       topHoldingsSummary: 'Top Holdings Summary',
       totalCorporateHoldings: 'Total Corporate Holdings',
       largestHolder: 'Largest Holder',
-      companiesTracked: 'Companies Tracked'
+      companiesTracked: 'Companies Tracked',
+      chart: 'Charts' // NEW
     },
     
     analytics: {
@@ -183,7 +187,9 @@ const translations = {
       dashboard: '资产管理面板',
       assetTracker: '资产追踪器',
       analytics: '分析报告',
-      backToDashboard: '返回面板'
+      backToDashboard: '返回面板',
+      adminPanel: '管理后台', // NEW
+      submitData: '提交数据' // NEW
     },
     
     common: {
@@ -197,7 +203,8 @@ const translations = {
       viewDetails: '查看详情',
       lastUpdated: '最后更新',
       companies: '家公司',
-      totalAUM: '总管理资产'
+      totalAUM: '总管理资产',
+      backToDashboard: '返回面板'
     },
     
     dashboard: {
@@ -281,7 +288,8 @@ const translations = {
       topHoldingsSummary: '顶级持仓摘要',
       totalCorporateHoldings: '企业总持仓',
       largestHolder: '最大持有者',
-      companiesTracked: '追踪公司'
+      companiesTracked: '追踪公司',
+      chart: '图表分析' // NEW
     },
     
     analytics: {
@@ -344,12 +352,15 @@ const translations = {
     }
   },
   
+  // ... (rest of zh-TW, ko, ja)
   'zh-TW': {
     nav: {
       dashboard: '資產管理面板',
       assetTracker: '資產追蹤器',
       analytics: '分析報告',
-      backToDashboard: '返回面板'
+      backToDashboard: '返回面板',
+      adminPanel: '管理後台', // NEW
+      submitData: '提交資料' // NEW
     },
     
     common: {
@@ -363,7 +374,8 @@ const translations = {
       viewDetails: '檢視詳情',
       lastUpdated: '最後更新',
       companies: '家公司',
-      totalAUM: '總管理資產'
+      totalAUM: '總管理資產',
+      backToDashboard: '返回面板'
     },
     
     dashboard: {
@@ -447,7 +459,8 @@ const translations = {
       topHoldingsSummary: '頂級持倉摘要',
       totalCorporateHoldings: '企業總持倉',
       largestHolder: '最大持有者',
-      companiesTracked: '追蹤公司'
+      companiesTracked: '追蹤公司',
+      chart: '圖表分析' // NEW
     },
     
     analytics: {
@@ -515,7 +528,9 @@ const translations = {
       dashboard: '자산 관리 대시보드',
       assetTracker: '자산 추적기',
       analytics: '분석 보고서',
-      backToDashboard: '대시보드로 돌아가기'
+      backToDashboard: '대시보드로 돌아가기',
+      adminPanel: '관리자 패널', // NEW
+      submitData: '데이터 제출' // NEW
     },
     
     common: {
@@ -529,7 +544,8 @@ const translations = {
       viewDetails: '세부 정보 보기',
       lastUpdated: '마지막 업데이트',
       companies: '개 회사',
-      totalAUM: '총 관리 자산'
+      totalAUM: '총 관리 자산',
+      backToDashboard: '대시보드로 돌아가기'
     },
     
     dashboard: {
@@ -613,7 +629,8 @@ const translations = {
       topHoldingsSummary: '주요 보유량 요약',
       totalCorporateHoldings: '총 기업 보유량',
       largestHolder: '최대 보유자',
-      companiesTracked: '추적 회사'
+      companiesTracked: '추적 회사',
+      chart: '차트 분석' // NEW
     },
     
     analytics: {
@@ -681,7 +698,9 @@ const translations = {
       dashboard: '資産管理ダッシュボード',
       assetTracker: '資産トラッカー',
       analytics: '分析レポート',
-      backToDashboard: 'ダッシュボードに戻る'
+      backToDashboard: 'ダッシュボードに戻る',
+      adminPanel: '管理パネル', // NEW
+      submitData: 'データ提出' // NEW
     },
     
     common: {
@@ -695,7 +714,8 @@ const translations = {
       viewDetails: '詳細を見る',
       lastUpdated: '最終更新',
       companies: '社',
-      totalAUM: '総運用資産'
+      totalAUM: '総運用資産',
+      backToDashboard: 'ダッシュボードに戻る'
     },
     
     dashboard: {
@@ -779,7 +799,8 @@ const translations = {
       topHoldingsSummary: '上位保有量サマリー',
       totalCorporateHoldings: '企業総保有量',
       largestHolder: '最大保有者',
-      companiesTracked: '追跡企業'
+      companiesTracked: '追跡企業',
+      chart: 'チャート分析' // NEW
     },
     
     analytics: {
@@ -844,7 +865,7 @@ const translations = {
 };
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [language, setLanguage] = useState<Language>('en');
+  const [language, setLanguage] = useState<Language>('zh-CN'); // Default to Chinese
 
   const t = (key: string): string => {
     const keys = key.split('.');
@@ -852,8 +873,15 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     
     for (const k of keys) {
       if (current[k] === undefined) {
-        console.warn(`Translation key "${key}" not found for language "${language}"`);
-        return key;
+        // Fallback to English if key is missing in selected language
+        let fallback: any = translations['en'];
+        for (const f of keys) {
+             if (fallback[f] === undefined) {
+                 return key; // Return key if not found in English fallback either
+             }
+             fallback = fallback[f];
+        }
+        return fallback;
       }
       current = current[k];
     }

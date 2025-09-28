@@ -14,11 +14,15 @@ import {
   DollarSign,
   Sun,
   Moon,
-  Languages,
-  Globe
+  Globe,
+  Wrench,
+  Send,
+  LogOut,
+  User
 } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useTheme } from '../contexts/ThemeContext';
+import { useAuth } from '../contexts/AuthContext'; // Import useAuth
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -30,6 +34,7 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const { language, setLanguage, t } = useLanguage();
   const { theme, toggleTheme } = useTheme();
+  const { isRegistered, isAdmin, login, logout, register } = useAuth(); // Use useAuth
 
   const navigationItems = [
     {
@@ -49,8 +54,23 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
       label: t('nav.analytics'),
       icon: TrendingUp,
       description: 'Market trends and performance'
-    }
+    },
+    // New Admin Panel for admin users
+    ...(isAdmin ? [{
+      id: 'admin',
+      label: t('nav.adminPanel'),
+      icon: Wrench,
+      description: 'Manage data and users'
+    }] : [])
   ];
+  
+  // New action button for submitting data
+  const submitDataButton = {
+    id: 'submit-data',
+    label: t('nav.submitData'),
+    icon: Send,
+    description: 'Manually submit new data for review'
+  }
 
   const languageOptions = [
     { value: 'en', label: t('lang.en'), flag: '🇺🇸' },
@@ -63,11 +83,27 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
   const toggleMobileMenu = () => {
     setIsMobileMenuOpen(!isMobileMenuOpen);
   };
+  
+  const handleAuthClick = (asAdmin: boolean = false) => {
+    if (isRegistered) {
+      logout();
+    } else {
+      // For simplicity, a single button handles login/register/admin
+      if (asAdmin) {
+        login(true);
+      } else {
+        login(false);
+      }
+    }
+    setIsMobileMenuOpen(false);
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    // Dark mode fix 1: Add dark background to the whole app container
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900"> 
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
+      {/* Dark mode fix 2: Add dark bg/border to header */}
+      <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo and Title */}
@@ -76,8 +112,8 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
                 <Bitcoin className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="font-semibold text-gray-900">DAT Monitor</h1>
-                <p className="text-xs text-gray-500">Digital Asset Treasury</p>
+                <h1 className="font-semibold text-gray-900 dark:text-gray-100">DAT Monitor</h1>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Digital Asset Treasury</p>
               </div>
             </div>
 
@@ -102,13 +138,25 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
               })}
             </nav>
 
-            {/* Controls */}
+            {/* Controls (Desktop) */}
             <div className="hidden lg:flex items-center space-x-4">
+              
+              {/* Submit Data Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onScreenChange(submitDataButton.id)}
+                className="flex items-center space-x-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>{submitDataButton.label}</span>
+              </Button>
+              
               {/* Language Selector */}
               <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
                 <SelectTrigger className="w-32">
                   <div className="flex items-center space-x-2">
-                    <Globe className="w-4 h-4" />
+                    <Globe className="w-4 h-4 text-gray-600 dark:text-gray-400" />
                     <span className="text-sm">
                       {languageOptions.find(opt => opt.value === language)?.flag}
                     </span>
@@ -131,7 +179,7 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
                 variant="ghost"
                 size="sm"
                 onClick={toggleTheme}
-                className="w-10 h-10 p-0"
+                className="w-10 h-10 p-0 text-gray-600 dark:text-gray-400"
               >
                 {theme === 'dark' ? (
                   <Sun className="w-4 h-4" />
@@ -140,10 +188,34 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
                 )}
               </Button>
               
-              {/* Market Status */}
+              {/* Auth Button */}
+              <Button
+                variant={isRegistered ? "outline" : "default"}
+                size="sm"
+                onClick={() => handleAuthClick(false)}
+                className="flex items-center space-x-2"
+              >
+                {isRegistered ? <LogOut className="w-4 h-4" /> : <User className="w-4 h-4" />}
+                <span>{isRegistered ? 'Logout' : 'Login/Register'}</span>
+              </Button>
+              
+              {/* Admin Login/Badge */}
+              {!isRegistered && (
+                  <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleAuthClick(true)}
+                      className="flex items-center space-x-1"
+                  >
+                      <Wrench className="w-4 h-4 text-gray-400" />
+                      <span className="text-sm">Admin</span>
+                  </Button>
+              )}
+              
+              {/* Market Status (Dark mode fix applied to text and badge) */}
               <div className="flex items-center space-x-2">
                 <Bitcoin className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-medium">$67,241</span>
+                <span className="text-sm font-medium text-gray-900 dark:text-gray-100">$67,241</span>
                 <Badge variant="secondary" className="text-green-600 bg-green-50 dark:bg-green-900/20 dark:text-green-400">
                   +2.4%
                 </Badge>
@@ -168,9 +240,9 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
 
         {/* Mobile Navigation */}
         {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white dark:bg-gray-800 dark:border-gray-700">
+          <div className="md:hidden border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
             <div className="px-4 py-2 space-y-1">
-              {navigationItems.map((item) => {
+              {navigationItems.concat(submitDataButton).map((item) => {
                 const Icon = item.icon;
                 const isActive = currentScreen === item.id;
                 
@@ -192,7 +264,7 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
               })}
               
               {/* Mobile Controls */}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-600 space-y-2">
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700 space-y-2">
                 <div className="flex items-center justify-between">
                   <span className="text-sm text-gray-600 dark:text-gray-400">Language</span>
                   <Select value={language} onValueChange={(value: Language) => setLanguage(value)}>
@@ -229,6 +301,17 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
                     )}
                   </Button>
                 </div>
+
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600 dark:text-gray-400">Account</span>
+                  <Button
+                    variant={isRegistered ? "outline" : "default"}
+                    size="sm"
+                    onClick={() => handleAuthClick(false)}
+                  >
+                    {isRegistered ? 'Logout' : 'Login/Register'}
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -241,7 +324,7 @@ export function Layout({ children, currentScreen, onScreenChange }: LayoutProps)
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 mt-12">
+      <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
             <div className="flex items-center space-x-4">
